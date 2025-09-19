@@ -1,0 +1,17 @@
+"use client"
+
+import React,{useEffect} from 'react'
+import PaymentPage from '@/components/PaymentPage'
+const Username = ({ params }) => {
+
+
+
+  return (
+    <>
+    <PaymentPage username={params.username}/>
+      
+    </>
+  )
+}
+
+export default Username
