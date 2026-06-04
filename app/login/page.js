@@ -1,24 +1,244 @@
 "use client"
 //  ye page wala login wala page hai
-import React,{useEffect} from 'react'
+import React,{useEffect, useState} from 'react'
 import { useSession, signIn, signOut } from "next-auth/react"
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { setUserRole } from '@/actions/useractions'
 const Login = () => {
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
     const router=useRouter()
-    //   useEffect(() => {
-    if(session){
-        const router=useRouter()
-        router.push('/dashboard')}
-    // } }, [router]);
+    const searchParams = useSearchParams()
+    const mode = searchParams.get("mode")
+    const redirect = searchParams.get("redirect")
+    const isCreatorFlow = mode === "creator-new" || mode === "creator-login"
+    const [activeTab, setActiveTab] = useState(mode === "user" ? "user" : "creator")
+    const [authMode, setAuthMode] = useState(mode === "creator-new" ? "register" : "login")
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        username: "",
+        password: "",
+        role: "user",
+    })
+    const [registerStatus, setRegisterStatus] = useState("")
+    const [loginStatus, setLoginStatus] = useState("")
+
+    useEffect(() => {
+        const redirectAfterLogin = async () => {
+            if (!session?.user?.name) {
+                return
+            }
+
+            if (mode === "creator-new") {
+                await setUserRole(session.user.name, "creator")
+                await update()
+                router.push(`/${session.user.name}`)
+                return
+            }
+
+            if (mode === "creator-login") {
+                router.push(`/${session.user.name}`)
+                return
+            }
+            if (redirect) {
+                router.push(redirect)
+                return
+            }
+
+            router.push('/dashboard')
+        }
+
+        redirectAfterLogin()
+    }, [mode, redirect, router, session, update])
+
+    useEffect(() => {
+        if (mode === "user") {
+            setActiveTab("user")
+            setAuthMode("login")
+        }
+        if (mode === "creator-new") {
+            setActiveTab("creator")
+            setAuthMode("register")
+        }
+        if (mode === "creator-login") {
+            setActiveTab("creator")
+            setAuthMode("login")
+        }
+    }, [mode])
+
+    const handleInputChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    }
+
+    const handleRegister = async () => {
+        setRegisterStatus("")
+        if (!form.email || !form.username || !form.password) {
+            setRegisterStatus("Email, username, and password are required")
+            return
+        }
+
+        const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                name: form.name,
+                email: form.email,
+                username: form.username,
+                password: form.password,
+                role: activeTab === "creator" ? "creator" : "user",
+            }),
+        })
+
+        const data = await res.json()
+        if (!res.ok || !data?.success) {
+            setRegisterStatus(data?.message || "Registration failed")
+            return
+        }
+
+        setRegisterStatus("Registered successfully. Please sign in.")
+        setAuthMode("login")
+    }
+
+    const handleCredentialsLogin = async () => {
+        setLoginStatus("")
+        if (!form.username || !form.password) {
+            setLoginStatus("Username and password are required")
+            return
+        }
+
+        const res = await signIn("credentials", {
+            redirect: false,
+            username: form.username,
+            password: form.password,
+        })
+
+        if (!res?.ok) {
+            setLoginStatus("Invalid credentials")
+            return
+        }
+    }
   return (
-    <div className='text-white py-14 container mx-auto '>
-      <h1 className=' text-center font-bold text-3xl'>Login to Get your fans to support you</h1>
+        <div className='text-white py-14 container mx-auto '>
+            <h1 className=' text-center font-bold text-3xl'>
+                {activeTab === "creator" ? "Creator Access" : "User Login"}
+            </h1>
+
+            <div className="flex justify-center gap-3 mt-6">
+                <button
+                    type="button"
+                    onClick={() => { setActiveTab("user"); setAuthMode("login"); }}
+                    className={`px-4 py-2 rounded-full text-sm ${activeTab === "user" ? "bg-lime-400 text-black" : "border border-gray-600 text-white"}`}
+                >
+                    User
+                </button>
+                <button
+                    type="button"
+                    onClick={() => { setActiveTab("creator"); setAuthMode("login"); }}
+                    className={`px-4 py-2 rounded-full text-sm ${activeTab === "creator" ? "bg-lime-400 text-black" : "border border-gray-600 text-white"}`}
+                >
+                    Creator
+                </button>
+            </div>
+
+            {activeTab === "creator" && (
+                <div className="flex justify-center gap-3 mt-4">
+                    <button
+                        type="button"
+                        onClick={() => setAuthMode("login")}
+                        className={`px-4 py-2 rounded-lg text-sm ${authMode === "login" ? "bg-gray-700" : "border border-gray-600"}`}
+                    >
+                        Already Sign In
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setAuthMode("register")}
+                        className={`px-4 py-2 rounded-lg text-sm ${authMode === "register" ? "bg-gray-700" : "border border-gray-600"}`}
+                    >
+                        New Creator
+                    </button>
+                </div>
+            )}
  
       <div className="flex flex-col gap-2  items-center min-h-screen p-10">
 
+      {authMode === "login" && (
+        <div className="w-full max-w-sm space-y-2 mb-6">
+            <input
+                name="username"
+                value={form.username}
+                onChange={handleInputChange}
+                placeholder="Username"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleInputChange}
+                placeholder="Password"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <button
+                type="button"
+                onClick={handleCredentialsLogin}
+                className="w-full p-2 rounded-lg bg-lime-400 text-black font-medium"
+            >
+                Login with Username
+            </button>
+            {loginStatus && (
+                <div className="text-xs text-gray-300">{loginStatus}</div>
+            )}
+        </div>
+      )}
 
-<button className="flex items-center w-64 bg-white border border-gray-300 rounded-lg shadow-md max-w-xs px-6 py-2 text-sm font-medium text-purple-700 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+      {authMode === "register" && (
+        <div className="w-full max-w-sm space-y-2 mb-6">
+            <input
+                name="name"
+                value={form.name}
+                onChange={handleInputChange}
+                placeholder="Full name"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <input
+                name="email"
+                value={form.email}
+                onChange={handleInputChange}
+                placeholder="Email"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <input
+                name="username"
+                value={form.username}
+                onChange={handleInputChange}
+                placeholder="Username"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleInputChange}
+                placeholder="Password"
+                className="w-full p-2 rounded-lg bg-gray-800 text-white text-sm"
+            />
+            <button
+                type="button"
+                onClick={handleRegister}
+                className="w-full p-2 rounded-lg bg-lime-400 text-black font-medium"
+            >
+                Register
+            </button>
+            {registerStatus && (
+                <div className="text-xs text-gray-300">{registerStatus}</div>
+            )}
+        </div>
+      )}
+
+
+<button onClick={()=>{signIn("google")}} className="flex items-center w-64 bg-white border border-gray-300 rounded-lg shadow-md max-w-xs px-6 py-2 text-sm font-medium text-purple-700 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
     <svg className="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink"
         viewBox="-0.5 0 48 48" version="1.1">
 

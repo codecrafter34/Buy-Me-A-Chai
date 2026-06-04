@@ -6,6 +6,7 @@ const Navbar = () => {
   const { data: session } = useSession()
   // if(session)console.log(session);
   const [showdropdown, setshowdropdown] = useState(false)
+  const [showCreatorMenu, setShowCreatorMenu] = useState(false)
   // console.log(session.user.name)
   return (
   <nav className='bg-gray-950 flex justify-between items-center px-6 h-14 pt-2 text-white sticky top-0 z-30 '>
@@ -29,16 +30,45 @@ const Navbar = () => {
       </li>
       
       <li>
-        <Link onClick={()=>signOut()} href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Sign out</Link>
+        <Link onClick={() => signOut({ callbackUrl: "/" })} href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Sign out</Link>
       </li>
     </ul>
 </div></>
 }
      
       {!session&&
-      <Link href={"/login"}>
-      <button type="button" className="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 shadow-lg shadow-lime-500/50 dark:shadow-lg dark:shadow-lime-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 "> Login</button>
-      </Link>}
+      <div className="flex items-center gap-2">
+        <div
+          className="relative"
+          onMouseEnter={() => setShowCreatorMenu(true)}
+          onMouseLeave={() => setShowCreatorMenu(false)}
+        >
+          <button
+            type="button"
+            className="border border-lime-400 text-lime-400 font-medium text-sm px-4 py-2 rounded-full hover:bg-lime-400 hover:text-black transition"
+          >
+            For Creators
+          </button>
+          <div className={`z-10 ${showCreatorMenu ? "" : "hidden"} absolute right-0 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700`}>
+            <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
+              <li>
+                <Link href="/login?mode=creator-new" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">New Creator</Link>
+              </li>
+              <li>
+                <Link href="/login?mode=creator-login" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Creator Login</Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <Link href="/login?mode=user">
+          <button
+            type="button"
+            className="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 shadow-lg shadow-lime-500/50 dark:shadow-lg dark:shadow-lime-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Login
+          </button>
+        </Link>
+      </div>}
     </div></nav>
 
   )

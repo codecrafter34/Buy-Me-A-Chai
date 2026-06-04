@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation'
+import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 import { ToastContainer, toast } from 'react-toastify'; // Make sure react-toastify is installed and imported
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,16 +15,17 @@ const PaymentPage = ({ username }) => {
     const [paymentform, setPaymentform] = useState({ name: "", message: "", amount: "" });
     const [currentUser, setcurrentUser] = useState({});
     const [payments, setPayments] = useState([]);
+    const [videos, setVideos] = useState([]);
+    const { data: session } = useSession()
     const searchParams = useSearchParams();
     const router = useRouter();
 
     
     useEffect(() => {
         getData();
-    }, []);
+    }, [username]);
 
     useEffect(() => {
-        console.log("hi chutiye")
         if (searchParams.get("paymentdone") === "true") {
             toast('Thanks for your donation!', {
                 position: "top-right",
@@ -35,9 +38,9 @@ const PaymentPage = ({ username }) => {
                  theme: "light",
                  transition: Bounce,
             });
-        }    
-         router.push(`/${username}`)
-    }, []);
+            router.replace(`/${username}`)
+        }
+    }, [router, searchParams, username]);
 
     const handleChange = (e) => {
         setPaymentform({ ...paymentform, [e.target.name]: e.target.value });
@@ -48,8 +51,19 @@ const PaymentPage = ({ username }) => {
         setcurrentUser(u);
         let dbpayments = await fetchpayments(username);
         setPayments(dbpayments);
+        await loadVideos();
         // console.log(u)
     };
+
+    const loadVideos = async () => {
+        const res = await fetch(`/api/creator-videos?username=${encodeURIComponent(username)}`, {
+            credentials: "include",
+        })
+        const data = await res.json()
+        if (res.ok && data?.success) {
+            setVideos(data.videos || [])
+        }
+    }
 
     const pay = async (amount) => {
         console.log(currentUser)
@@ -129,6 +143,92 @@ const PaymentPage = ({ username }) => {
         rzp1.open();
     };
 
+    const unlockVideo = async (video) => {
+        if (!session?.user?.email) {
+            toast.error("Login required to unlock", {
+                position: "top-right",
+                autoClose: 4000,
+            })
+            return
+        }
+        if (!video?.price) {
+            return
+        }
+
+        if (!window?.Razorpay) {
+            toast.error("Payment service not ready. Please try again.", {
+                position: "top-right",
+                autoClose: 4000,
+            })
+            return
+        }
+
+        const orderRes = await fetch("/api/video-order", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ amount: Number.parseInt(video.price, 10) * 100 }),
+        })
+
+        const orderData = await orderRes.json()
+        if (!orderRes.ok || !orderData?.success) {
+            toast.error(orderData?.message || "Unable to start payment", {
+                position: "top-right",
+                autoClose: 5000,
+            })
+            return
+        }
+
+        const options = {
+            key: process.env.NEXT_PUBLIC_KEY_ID,
+            amount: Number.parseInt(video.price, 10) * 100,
+            currency: "INR",
+            name: "Get Me A Chai",
+            description: "Unlock video",
+            order_id: orderData.orderId,
+            handler: async function (response) {
+                const res = await fetch("/api/video-verify", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        orderId: orderData.orderId,
+                        paymentId: response.razorpay_payment_id,
+                        signature: response.razorpay_signature,
+                        videoId: video._id,
+                    }),
+                })
+
+                const data = await res.json()
+                if (res.ok && data?.success) {
+                    await loadVideos()
+                    toast("Video unlocked", {
+                        position: "top-right",
+                        autoClose: 4000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "light",
+                        transition: Bounce,
+                    })
+                    return
+                }
+
+                toast.error(data?.message || "Unlock failed", {
+                    position: "top-right",
+                    autoClose: 5000,
+                })
+            },
+        }
+
+        const rzp = new window.Razorpay(options)
+        rzp.open()
+    }
+
     return (
         <>
                     <ToastContainer
@@ -148,19 +248,95 @@ const PaymentPage = ({ username }) => {
             <Script src="https://checkout.razorpay.com/v1/checkout.js"></Script>
 
             <div className='cover w-full relative '>
-                <img className='w-full h-[300px] object-cover' src="/das.png" alt="" />
+                <img className='w-full h-[300px] object-cover' src={currentUser?.coverpic ? `${currentUser.coverpic}?v=${currentUser.updatedAt || ""}` : "/das.png"} alt="" />
                 <div className='absolute top-[200px] right-[44%]'>
-                    <img className='w-40 h-40 rounded-xl border-2 border-gray-700 shadow-lg object-cover' src="/das.png" alt="" />
+                    <img className='w-40 h-40 rounded-xl border-2 border-gray-700 shadow-lg object-cover' src={currentUser?.profilepic ? `${currentUser.profilepic}?v=${currentUser.updatedAt || ""}` : "/das.png"} alt="" />
                 </div>
                 <div className='info flex justify-center items-center my-20 flex-col gap-2 text-xs '>
                     <div className='font-bold text-lg'>
                         {username}
                     </div>
+                    {/* <div className="text-gray-400 text-[10px] break-all max-w-2xl text-center">
+                        cover: {currentUser?.coverpic || "(empty)"} | profile: {currentUser?.profilepic || "(empty)"}
+                    </div> */}
                     <div className='text-slate-300'>
                         Creating animated art for VTT's
                     </div>
                     <div className='text-slate-300'>
                         9,719 members • 82 post • $15,450/release
+                    </div>
+                    <div className="w-[80%] mt-6">
+                        <h2 className="text-lg font-bold text-lime-400 mb-3">Videos</h2>
+                        {videos.length === 0 && (
+                            <div className="text-gray-400">No videos yet</div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {videos.map((video) => {
+                                const isUnlocked = video.isUnlocked
+                                return (
+                                <div key={video._id} className="border border-gray-800 rounded-lg p-3 bg-black">
+                                    <div className="text-sm font-semibold text-white">{video.title}</div>
+                                    {video.description && (
+                                        <div className="text-xs text-gray-400 mt-1">{video.description}</div>
+                                    )}
+                                    <div className="mt-2 relative">
+                                        {isUnlocked ? (
+                                            <video
+                                                className="w-full rounded-md"
+                                                controls
+                                                controlsList="nodownload noplaybackrate"
+                                                disablePictureInPicture
+                                                playsInline
+                                                onContextMenu={(e) => e.preventDefault()}
+                                                src={video.videoUrl}
+                                            ></video>
+                                        ) : (
+                                            video.previewUrl ? (
+                                                <>
+                                                    <video
+                                                        className="w-full rounded-md"
+                                                        controls
+                                                        controlsList="nodownload noplaybackrate"
+                                                        disablePictureInPicture
+                                                        playsInline
+                                                        onContextMenu={(e) => e.preventDefault()}
+                                                        src={video.previewUrl}
+                                                    ></video>
+                                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-md flex items-center justify-center text-xs text-white">
+                                                        Preview locked
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="text-xs text-gray-400">Preview not set</div>
+                                            )
+                                        )}
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <span className="text-xs text-gray-300">Unlock for ₹{video.price}</span>
+                                        {!isUnlocked && !video.isOwner && session?.user?.email && (
+                                            <button
+                                                onClick={() => unlockVideo(video)}
+                                                className="text-xs px-3 py-1 rounded-md bg-lime-400 text-black font-medium"
+                                            >
+                                                Unlock
+                                            </button>
+                                        )}
+                                        {!isUnlocked && !video.isOwner && !session?.user?.email && (
+                                            <Link
+                                                href={`/login?mode=user&redirect=/${username}`}
+                                                className="text-xs px-3 py-1 rounded-md bg-lime-400 text-black font-medium"
+                                            >
+                                                Login to unlock
+                                            </Link>
+                                        )}
+                                        {isUnlocked && (
+                                            <span className="text-xs text-lime-400">Unlocked</span>
+                                        )}
+                                    </div>
+                                </div>
+                                )
+                            })}
+                        </div>
                     </div>
                     <div className="payment flex gap-3 w-[80%] rounded-lg p-10">
                         <div className="supporter w-1/2 bg-black text-lime-400 border-2 border-lime-400 p-2">

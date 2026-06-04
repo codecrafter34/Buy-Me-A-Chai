@@ -3,6 +3,7 @@ import Razorpay from "razorpay"
 import Payment from "@/models/Payment"
 import connectDb from "@/db/connectDb"
 import User from "@/models/User"
+import Video from "@/models/Video"
 
 
 export const initiate = async (amount, to_username, paymentform) => {
@@ -45,6 +46,38 @@ export const fetchpayments = async (username) => {
     return p
 }
 
+export const fetchVideosByCreator = async (username) => {
+    await connectDb()
+    const user = await User.findOne({ username: username })
+    if (!user) {
+        return []
+    }
+    const videos = await Video.find({ creatorId: user._id }).sort({ createdAt: -1 }).lean()
+    return videos
+}
+
+export const setUserRole = async (username, role) => {
+    await connectDb()
+    if (!username) {
+        return { success: false, message: "Username is required" }
+    }
+    if (role !== "user" && role !== "creator") {
+        return { success: false, message: "Invalid role" }
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+        { username: username },
+        { role: role },
+        { new: true }
+    )
+
+    if (!updatedUser) {
+        return { success: false, message: "User not found" }
+    }
+
+    return { success: true, role: updatedUser.role }
+}
+
 // export const updateProfile = async (data, oldusername) => {
 //     await connectDb()
 //     let ndata = Object.fromEntries(data)
@@ -81,7 +114,7 @@ export const updateProfile = async (formData, username) => {
         // Find the user by the username passed from the session
         const updatedUser = await User.findOneAndUpdate(
             { username: username }, // The condition to find the user
-            data,                  // The new data to update
+            { ...data, updatedAt: new Date() },
             { new: true }          // This option returns the updated document
         );
 
