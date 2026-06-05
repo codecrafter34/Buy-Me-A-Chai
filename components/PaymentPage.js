@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react"
 import { ToastContainer, toast } from 'react-toastify'; // Make sure react-toastify is installed and imported
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
-import { fetchuser, fetchpayments, initiate } from '@/actions/useractions';
+import { fetchuser, fetchpayments, initiate, fetchCreatorStats } from '@/actions/useractions';
 
 import { useRouter} from "next/navigation";
 const PaymentPage = ({ username }) => {
@@ -16,6 +16,7 @@ const PaymentPage = ({ username }) => {
     const [currentUser, setcurrentUser] = useState({});
     const [payments, setPayments] = useState([]);
     const [videos, setVideos] = useState([]);
+    const [stats, setStats] = useState({ totalAmount: 0, uniquePayers: 0 });
     const { data: session } = useSession()
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -51,6 +52,8 @@ const PaymentPage = ({ username }) => {
         setcurrentUser(u);
         let dbpayments = await fetchpayments(username);
         setPayments(dbpayments);
+        let dbstats = await fetchCreatorStats(username);
+        setStats(dbstats);
         await loadVideos();
         // console.log(u)
     };
@@ -263,7 +266,7 @@ const PaymentPage = ({ username }) => {
                         Creating animated art for VTT's
                     </div>
                     <div className='text-slate-300'>
-                        9,719 members • 82 post • $15,450/release
+                        {stats.uniquePayers} members • {videos.length} post • ₹{stats.totalAmount}/release
                     </div>
                     <div className="w-[80%] mt-6">
                         <h2 className="text-lg font-bold text-lime-400 mb-3">Videos</h2>
@@ -340,12 +343,14 @@ const PaymentPage = ({ username }) => {
                     </div>
                     <div className="payment flex gap-3 w-[80%] rounded-lg p-10">
                         <div className="supporter w-1/2 bg-black text-lime-400 border-2 border-lime-400 p-2">
-                            <h2 className=' mx-2 text-lg font-bold my-1'>Supporters</h2>
+                            <h2 className=' mx-2 text-lg font-bold my-1'>Top Supporters</h2>
                             <ul>
                                    {payments.length == 0 && <li className="mx-5">No payments yet</li>}
                                 {/* Replace with dynamic data from your 'payments' state */}
                                 {payments.map((p, i) => (
-                                    <li className="mx-5" key={i}> {p.name} donated ${p.amount} with a message "{p.message}"</li>
+                                    <li className="mx-5 my-2 border-b border-gray-800 pb-2" key={i}> 
+                                        <span className="font-semibold text-white">{p.name}</span> donated <span className="font-bold">₹{p.amount}</span> with a message "{p.message}"
+                                    </li>
                                 ))}
                             </ul>
                         </div>

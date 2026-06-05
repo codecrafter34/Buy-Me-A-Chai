@@ -46,6 +46,14 @@ export const fetchpayments = async (username) => {
     return p
 }
 
+export const fetchCreatorStats = async (username) => {
+    await connectDb()
+    const payments = await Payment.find({ to_user: username, done: true }).lean()
+    const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)
+    const uniquePayers = new Set(payments.map(p => p.name)).size
+    return { totalAmount, uniquePayers }
+}
+
 export const fetchVideosByCreator = async (username) => {
     await connectDb()
     const user = await User.findOne({ username: username })

@@ -50,7 +50,7 @@ export const authoptions =  NextAuth({
     ],
     callbacks: {
       async signIn({ user, account, profile, email, credentials }) {
-         if(account.provider == "github" || account.provider == "google") { 
+         if(account?.provider == "github" || account?.provider == "google") { 
           await connectDb()
           // Check if the user already exists in the database
           const currentUser =  await User.findOne({email: user.email}) 
@@ -67,12 +67,21 @@ export const authoptions =  NextAuth({
           } 
           return true
          }
+         if (account?.provider === "credentials") {
+             return true
+         }
+         return true; // default true
       },
       
       async session({ session, user, token }) {
-        const dbUser = await User.findOne({email: session.user.email})
-        session.user.name = dbUser.username
-        session.user.role = dbUser.role
+        await connectDb()
+        if (session?.user?.email) {
+            const dbUser = await User.findOne({email: session.user.email})
+            if (dbUser) {
+                session.user.name = dbUser.username
+                session.user.role = dbUser.role
+            }
+        }
         return session
       },
     } 
