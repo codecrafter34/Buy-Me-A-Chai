@@ -70,8 +70,17 @@ const PaymentPage = ({ username }) => {
 
     const pay = async (amount) => {
         console.log(currentUser)
+
+        let payload = { ...paymentform };
+        if (!payload.name) {
+            payload.name = session?.user?.name || session?.user?.email?.split('@')[0] || "Anonymous";
+        }
+        if (!payload.message) {
+            payload.message = "Keep up the good work!";
+        }
+
         // Step 1: Initiate an order from your server
-        let a = await initiate(amount, username, paymentform);
+        let a = await initiate(amount, username, payload);
         let orderId = a.id;
 
         // Step 2: Configure Razorpay options
@@ -273,19 +282,21 @@ const PaymentPage = ({ username }) => {
                         {videos.length === 0 && (
                             <div className="text-gray-400">No videos yet</div>
                         )}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex overflow-x-auto gap-4 pb-4 snap-x custom-scrollbar">
                             {videos.map((video) => {
                                 const isUnlocked = video.isUnlocked
                                 return (
-                                <div key={video._id} className="border border-gray-800 rounded-lg p-3 bg-black">
-                                    <div className="text-sm font-semibold text-white">{video.title}</div>
-                                    {video.description && (
-                                        <div className="text-xs text-gray-400 mt-1">{video.description}</div>
-                                    )}
-                                    <div className="mt-2 relative">
+                                <div key={video._id} className="w-72 flex-shrink-0 snap-start border border-gray-800 rounded-lg p-3 bg-black flex flex-col justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white truncate">{video.title}</div>
+                                        {video.description && (
+                                            <div className="text-xs text-gray-400 mt-1 line-clamp-2" title={video.description}>{video.description}</div>
+                                        )}
+                                    </div>
+                                    <div className="mt-2 relative h-36 bg-gray-900 rounded-md overflow-hidden">
                                         {isUnlocked ? (
                                             <video
-                                                className="w-full rounded-md"
+                                                className="w-full h-full object-cover"
                                                 controls
                                                 controlsList="nodownload noplaybackrate"
                                                 disablePictureInPicture
@@ -294,32 +305,32 @@ const PaymentPage = ({ username }) => {
                                                 src={video.videoUrl}
                                             ></video>
                                         ) : (
-                                            video.previewUrl ? (
-                                                <>
-                                                    <video
-                                                        className="w-full rounded-md"
-                                                        controls
-                                                        controlsList="nodownload noplaybackrate"
-                                                        disablePictureInPicture
-                                                        playsInline
-                                                        onContextMenu={(e) => e.preventDefault()}
-                                                        src={video.previewUrl}
-                                                    ></video>
-                                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-md flex items-center justify-center text-xs text-white">
-                                                        Preview locked
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="text-xs text-gray-400">Preview not set</div>
-                                            )
+                                            <div className="relative w-full h-full">
+                                                <video
+                                                    className="w-full h-full object-cover opacity-60"
+                                                    src={video.previewUrl || video.videoUrl}
+                                                    preload="metadata"
+                                                ></video>
+                                                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center text-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-1 text-lime-400" viewBox="0 0 20 20" fill="currentColor">
+                                                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span className="font-bold text-sm">Locked Video</span>
+                                                    {!session?.user?.email ? (
+                                                        <span className="text-[10px] mt-1 text-gray-300">Login to unlock</span>
+                                                    ) : (
+                                                        <span className="text-[10px] mt-1 text-gray-300">Unlock for ₹{video.price}</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-xs text-gray-300">Unlock for ₹{video.price}</span>
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-white border border-gray-700 px-2 py-1 rounded bg-gray-900">Unlock for ₹{video.price}</span>
                                         {!isUnlocked && !video.isOwner && session?.user?.email && (
                                             <button
                                                 onClick={() => unlockVideo(video)}
-                                                className="text-xs px-3 py-1 rounded-md bg-lime-400 text-black font-medium"
+                                                className="text-[10px] px-2 py-1 rounded-md bg-lime-400 text-black font-bold"
                                             >
                                                 Unlock
                                             </button>
@@ -327,13 +338,13 @@ const PaymentPage = ({ username }) => {
                                         {!isUnlocked && !video.isOwner && !session?.user?.email && (
                                             <Link
                                                 href={`/login?mode=user&redirect=/${username}`}
-                                                className="text-xs px-3 py-1 rounded-md bg-lime-400 text-black font-medium"
+                                                className="text-[10px] px-2 py-1 rounded-md bg-lime-400 text-black font-bold"
                                             >
                                                 Login to unlock
                                             </Link>
                                         )}
                                         {isUnlocked && (
-                                            <span className="text-xs text-lime-400">Unlocked</span>
+                                            <span className="text-[10px] text-lime-400 font-bold">Unlocked</span>
                                         )}
                                     </div>
                                 </div>

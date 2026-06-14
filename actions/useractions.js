@@ -24,8 +24,11 @@ export const initiate = async (amount, to_username, paymentform) => {
 
     let x = await instance.orders.create(options)
 
+    let paymentName = paymentform?.name?.trim() ? paymentform.name.trim() : "Anonymous";
+    let paymentMessage = paymentform?.message?.trim() ? paymentform.message.trim() : "Keep up the good work!";
+
     // create a payment object which shows a pending payment in the database
-    await Payment.create({ order_id: x.id, amount: amount/100, to_user: to_username, name: paymentform.name, message: paymentform.message })
+    await Payment.create({ order_id: x.id, amount: amount/100, to_user: to_username, name: paymentName, message: paymentMessage })
 
     return x
 
@@ -62,6 +65,20 @@ export const fetchVideosByCreator = async (username) => {
     }
     const videos = await Video.find({ creatorId: user._id }).sort({ createdAt: -1 }).lean()
     return videos
+}
+
+export const deleteVideo = async (videoId, username) => {
+    await connectDb()
+    const user = await User.findOne({ username: username })
+    if (!user) {
+        return { success: false, message: "User not found" }
+    }
+    const video = await Video.findOne({ _id: videoId, creatorId: user._id })
+    if (!video) {
+        return { success: false, message: "Video not found or unauthorized" }
+    }
+    await Video.deleteOne({ _id: videoId })
+    return { success: true, message: "Video deleted successfully" }
 }
 
 export const setUserRole = async (username, role) => {

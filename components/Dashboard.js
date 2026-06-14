@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter } from 'next/navigation'
-import { fetchuser, updateProfile, setUserRole } from '@/actions/useractions'
+import { fetchuser, updateProfile, setUserRole, fetchVideosByCreator, deleteVideo } from '@/actions/useractions'
 import { ToastContainer } from 'react-toastify';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -23,6 +23,7 @@ const Dashboard = () => {
     const [previewUploading, setPreviewUploading] = useState(false)
     const [previewUrl, setPreviewUrl] = useState("")
     const [videoForm, setVideoForm] = useState({ title: "", description: "", price: "" })
+    const [creatorVideos, setCreatorVideos] = useState([])
 
     useEffect(() => {
         getData()
@@ -38,7 +39,28 @@ const Dashboard = () => {
         // console.log(session)
         let u = await fetchuser(session.user.name)
         setform(u)
-    
+        let vids = await fetchVideosByCreator(session.user.name)
+        setCreatorVideos(vids)
+    }
+
+    const handleDeleteVideo = async (videoId) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this video?")
+        if (!confirmDelete) return
+        
+        const res = await deleteVideo(videoId, session.user.name)
+        if (res.success) {
+            toast("Video deleted successfully", {
+                position: "top-right",
+                autoClose: 4000,
+                theme: "light",
+            })
+            getData()
+        } else {
+            toast.error(res.message || "Failed to delete video", {
+                position: "top-right",
+                autoClose: 5000,
+            })
+        }
     }
 
     const handleChange = (e) => {
@@ -205,6 +227,11 @@ const Dashboard = () => {
             transition: Bounce,
         })
         setVideoUploading(false)
+        setVideoForm({ title: "", description: "", price: "" })
+        setVideoFile(null)
+        setVideoPreview("")
+        setVideoUrl("")
+        getData()
     }
 
     const handlePreviewChange = (e) => {
@@ -507,6 +534,36 @@ const Dashboard = () => {
                             </div>
                         )}
                     </div>
+                </div>
+
+                <div className="max-w-2xl mx-auto mb-8 border border-gray-800 rounded-lg p-4">
+                    <h2 className="text-lg font-semibold mb-4">My Uploaded Videos</h2>
+                    {creatorVideos.length === 0 ? (
+                        <div className="text-sm text-gray-400">You haven't uploaded any videos yet.</div>
+                    ) : (
+                        <div className="flex overflow-x-auto gap-4 pb-2 snap-x custom-scrollbar">
+                            {creatorVideos.map(video => (
+                                <div key={video._id} className="w-60 flex-shrink-0 snap-start bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col justify-between">
+                                    <div className="w-full h-32 bg-black rounded overflow-hidden relative mb-2">
+                                        <video className="w-full h-full object-cover" src={video.previewUrl || video.videoUrl} preload="metadata"></video>
+                                    </div>
+                                    <div className="flex flex-col flex-grow justify-between">
+                                        <div>
+                                            <h3 className="font-bold text-lime-400 text-sm truncate">{video.title}</h3>
+                                            <p className="text-[10px] text-gray-400 mt-1 line-clamp-2" title={video.description}>{video.description}</p>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-3">
+                                            <span className="text-xs font-semibold text-white border border-gray-700 px-2 py-1 rounded bg-black">₹{video.price}</span>
+                                            <div className="flex gap-2">
+                                                <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors">View</a>
+                                                <button onClick={() => handleDeleteVideo(video._id)} className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 transition-colors">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <form className="max-w-2xl mx-auto" action={handleSubmit} >

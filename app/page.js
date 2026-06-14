@@ -72,11 +72,19 @@ export default function Home() {
       A platform where creators can share content, receive support, and earn from their audience.
     </p>
     <div className="flex gap-4 mt-4">
-      <Link href="/login">
-        <button type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
-          Become a Creator
-        </button>
-      </Link>
+      {session ? (
+        <Link href="/dashboard">
+          <button type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
+            Go to Dashboard
+          </button>
+        </Link>
+      ) : (
+        <Link href="/login?mode=creator">
+          <button type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
+            Become a Creator
+          </button>
+        </Link>
+      )}
       <Link href="/explore">
         <button type="button" className="bg-transparent border-2 border-gray-700 text-white font-semibold rounded-lg px-6 py-3 hover:border-lime-400 hover:text-lime-400 transition">
           Explore Creators

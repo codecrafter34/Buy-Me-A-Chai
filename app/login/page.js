@@ -36,6 +36,7 @@ const Login = () => {
 
             let role = session.user.role;
             const intendedRole = localStorage.getItem("intendedRole");
+            const postLoginRedirect = localStorage.getItem("postLoginRedirect");
 
             if (intendedRole === "creator" && role !== "creator") {
                 await setUserRole(session.user.name, "creator");
@@ -44,16 +45,23 @@ const Login = () => {
             }
 
             localStorage.removeItem("intendedRole");
+            localStorage.removeItem("postLoginRedirect");
 
             if (role === 'creator') {
                 router.push('/dashboard')
             } else {
-                router.push('/')
+                if (redirect) {
+                    router.push(redirect)
+                } else if (postLoginRedirect) {
+                    router.push(postLoginRedirect)
+                } else {
+                    router.push('/')
+                }
             }
         }
 
         redirectAfterLogin()
-    }, [session, router, update])
+    }, [session, router, update, redirect])
 
     useEffect(() => {
         if (mode === "user") {
@@ -76,6 +84,9 @@ const Login = () => {
 
     const handleOAuthLogin = (provider) => {
         localStorage.setItem("intendedRole", activeTab);
+        if (redirect) {
+            localStorage.setItem("postLoginRedirect", redirect);
+        }
         signIn(provider);
     }
 
