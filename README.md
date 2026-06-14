@@ -27,7 +27,7 @@ A simple platform where creators can share their work and supporters can encoura
 ## ⚙️ Installation & Setup  
 
 ### 1. Clone the repo
-       git clone https://github.com/your-username/buy-me-a-chai.git
+       git clone https://github.com/codecrafter34/buy-me-a-chai.git
        cd buy-me-a-chai
 ### 2. Install dependencies
        npm install
