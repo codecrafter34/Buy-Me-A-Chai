@@ -515,7 +515,7 @@ const Dashboard = () => {
                 <div className="max-w-2xl mx-auto mb-8 border border-gray-800 rounded-lg p-4">
                     <h2 className="text-lg font-semibold mb-4">My Uploaded Videos</h2>
                     {creatorVideos.length === 0 ? (
-                        <div className="text-sm text-gray-400">You haven't uploaded any videos yet.</div>
+                        <div className="text-sm text-gray-400">You haven&apos;t uploaded any videos yet.</div>
                     ) : (
                         <div className="flex overflow-x-auto gap-4 pb-2 snap-x custom-scrollbar">
                             {creatorVideos.map(video => (

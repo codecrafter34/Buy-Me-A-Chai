@@ -275,7 +275,7 @@ const PaymentPage = ({ username }) => {
                         cover: {currentUser?.coverpic || "(empty)"} | profile: {currentUser?.profilepic || "(empty)"}
                     </div> */}
                     <div className='text-slate-300'>
-                        Creating animated art for VTT's
+                        Creating animated art for VTT&apos;s
                     </div>
                     <div className='text-slate-300'>
                         {stats.uniquePayers} members • {videos.length} post • ₹{stats.totalAmount}/release
@@ -363,7 +363,7 @@ const PaymentPage = ({ username }) => {
                                 {/* Replace with dynamic data from your 'payments' state */}
                                 {payments.map((p, i) => (
                                     <li className="mx-5 my-2 border-b border-gray-800 pb-2" key={i}> 
-                                        <span className="font-semibold text-white">{p.name}</span> donated <span className="font-bold">₹{p.amount}</span> with a message "{p.message}"
+                                        <span className="font-semibold text-white">{p.name}</span> donated <span className="font-bold">₹{p.amount}</span> with a message &quot;{p.message}&quot;
                                     </li>
                                 ))}
                             </ul>
