@@ -32,11 +32,31 @@ A simple platform where creators can share their work and supporters can encoura
 ### 2. Install dependencies
        npm install
 ### 3. Setup environment variables
-     Create a .env.local file in the root folder and add:
-     MONGODB_URI=your-mongodb-connection
-     RAZORPAY_KEY_ID=your-razorpay-key
-     RAZORPAY_KEY_SECRET=your-razorpay-secret
+     Create a .env.local file in the root folder and add the following keys:
+     
+     # Database
+     MONGODB_URI=your-mongodb-connection-string
+     
+     # NextAuth Configuration
      NEXTAUTH_SECRET=your-next-auth-secret
+     NEXTAUTH_URL=http://localhost:3000
+     NEXT_PUBLIC_URL=http://localhost:3000
+     
+     # OAuth Providers
+     GITHUB_ID=your-github-client-id
+     GITHUB_SECRET=your-github-client-secret
+     GOOGLE_ID=your-google-client-id
+     GOOGLE_SECRET=your-google-client-secret
+     
+     # Razorpay
+     NEXT_PUBLIC_KEY_ID=your-razorpay-key-id
+     KEY_SECRET=your-razorpay-key-secret
+     
+     # Cloudinary (For media uploads)
+     CLOUDINARY_CLOUD_NAME=your-cloud-name
+     CLOUDINARY_API_KEY=your-api-key
+     CLOUDINARY_API_SECRET=your-api-secret
+     CLOUDINARY_UPLOAD_PRESET=your-upload-preset
 ### 4. Run the project
       npm run dev
 ### 📁 Folder Structure

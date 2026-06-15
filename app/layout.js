@@ -8,8 +8,11 @@ import SessionWrapper from "@/components/SessionWrapper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Get me a Chai -Fund your Projects with chai",
+  title: "Get me a Chai - Fund your Projects with chai",
   description: "This website is a crowdfunding platform for creators.",
+  icons: {
+    icon: "/tea.gif",
+  },
 };
 
 export default function RootLayout({ children }) {

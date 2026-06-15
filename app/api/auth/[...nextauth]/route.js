@@ -79,6 +79,7 @@ export const authoptions =  NextAuth({
             const dbUser = await User.findOne({email: session.user.email})
             if (dbUser) {
                 session.user.name = dbUser.username
+                session.user.displayName = dbUser.name
                 session.user.role = dbUser.role
             }
         }

@@ -7,7 +7,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import tea from "../app/tea.gif"
 
 export default function Home() {
@@ -16,6 +17,15 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ totalUsers: 0, totalAmount: 0, totalDonors: 0 });
   const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleBecomeCreator = async () => {
+    if (session) {
+      await signOut({ callbackUrl: '/login?mode=creator' })
+    } else {
+      router.push('/login?mode=creator')
+    }
+  }
 
   useEffect(() => {
     // Fetch global stats
@@ -71,19 +81,17 @@ export default function Home() {
     <p className="text-gray-300 max-w-2xl text-lg md:text-xl">
       A platform where creators can share content, receive support, and earn from their audience.
     </p>
-    <div className="flex gap-4 mt-4">
-      {session ? (
+    <div className="flex flex-col sm:flex-row gap-4 mt-4">
+      {session?.user?.role === 'creator' ? (
         <Link href="/dashboard">
-          <button type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
+          <button type="button" className="bg-transparent border-2 border-lime-400 text-lime-400 font-semibold rounded-lg px-6 py-3 hover:bg-lime-400 hover:text-black transition">
             Go to Dashboard
           </button>
         </Link>
       ) : (
-        <Link href="/login?mode=creator">
-          <button type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
-            Become a Creator
-          </button>
-        </Link>
+        <button onClick={handleBecomeCreator} type="button" className="bg-lime-400 text-black font-semibold rounded-lg px-6 py-3 hover:bg-lime-500 transition shadow-lg shadow-lime-400/20">
+          Become a Creator
+        </button>
       )}
       <Link href="/explore">
         <button type="button" className="bg-transparent border-2 border-gray-700 text-white font-semibold rounded-lg px-6 py-3 hover:border-lime-400 hover:text-lime-400 transition">
@@ -154,7 +162,7 @@ export default function Home() {
 
     <div className="text-white container mx-auto">
       <h1 className="text-2xl font-bold text-center my-14">Your Fans can buy you a Chai</h1>
-      <div className="flex gap-5 justify-around">
+      <div className="flex flex-col md:flex-row gap-8 justify-around items-center">
         <div className="item space-y-3 flex flex-col items-center">
           <img src="/man.gif" className="bg-slate-400 rounded-full p-2 text-black" width={88} alt="" />
           <p className="font-bold">{stats.totalUsers} Users joined</p>
@@ -174,7 +182,7 @@ export default function Home() {
 
 <div className="text-white container mx-auto pb-32 pt-14 flex flex-col items-center justify-center">
   <h2 className="text-3xl font-bold text-center mb-14">Learn more about us</h2>
-  <p className="mx-20">Get Me A Chai is a simple platform where creators can share their work and supporters can encourage them by buying a “chai.” ☕ It’s built to empower developers, artists, and changemakers with an easy, secure way to receive support, stay motivated, and keep creating without worrying about monetization</p>
+  <p className="mx-4 md:mx-20 text-center">Get Me A Chai is a simple platform where creators can share their work and supporters can encourage them by buying a “chai.” ☕ It’s built to empower developers, artists, and changemakers with an easy, secure way to receive support, stay motivated, and keep creating without worrying about monetization</p>
 </div>
 
   </>

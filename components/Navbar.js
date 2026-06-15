@@ -9,18 +9,18 @@ const Navbar = () => {
   const [showCreatorMenu, setShowCreatorMenu] = useState(false)
   // console.log(session.user.name)
   return (
-  <nav className='bg-gray-950 flex justify-between items-center px-6 h-14 pt-2 text-white sticky top-0 z-30 '>
+  <nav className='bg-gray-950 flex justify-between items-center px-4 md:px-6 h-14 pt-2 text-white sticky top-0 z-30 '>
 
 
 
       <Link href={"/"} className=' text-lime-400'>Buy Me a Chai !</Link>
       <div className='relative'>
-        {session&& <><button onClick={()=>setshowdropdown(!showdropdown)}  onBlur={()=>{setTimeout(()=>{setshowdropdown(false)},1000);}} id="dropdownDefaultButton" data-dropdown-toggle="dropdown" className=" border border-lime-400 text-lime-400 mx-4   font-medium  text-sm px-4 py-2 text-center inline-flex items-center hover:bg-lime-400 hover:text-black rounded-full transition  " type="button">Welcome, {session.user?.name|| session.user?.email?.split('@')[0] } <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+        {session&& <><button onClick={()=>setshowdropdown(!showdropdown)}  onBlur={()=>{setTimeout(()=>{setshowdropdown(false)},1000);}} id="dropdownDefaultButton" data-dropdown-toggle="dropdown" className=" border border-lime-400 text-lime-400 mx-1 md:mx-4 font-medium text-xs md:text-sm px-3 md:px-4 py-2 text-center inline-flex items-center hover:bg-lime-400 hover:text-black rounded-full transition  " type="button"><span className="hidden sm:inline">Welcome, </span>{session.user?.displayName || session.user?.name || session.user?.email?.split('@')[0] } <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
 </svg>
 </button>
 
-<div id="dropdown" className={`z-10 ${showdropdown?"":"hidden"} absolute left-[70px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700`}>
+<div id="dropdown" className={`z-10 ${showdropdown?"":"hidden"} absolute left-[10px] bg-black divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700`}>
     <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
       {session.user?.role === 'creator' && (
         <>

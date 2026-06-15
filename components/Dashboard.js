@@ -286,31 +286,7 @@ const Dashboard = () => {
     }
 
     const handleBecomeCreator = async () => {
-        if (!session?.user?.name) {
-            return
-        }
-
-        const result = await setUserRole(session.user.name, "creator")
-        if (result?.success) {
-            await update()
-            toast('You are now a creator!', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-            });
-            return
-        }
-
-        toast.error(result?.message || 'Unable to update role', {
-            position: "top-right",
-            autoClose: 5000,
-        });
+        await signOut({ callbackUrl: '/login?mode=creator' })
     }
 
 
@@ -335,7 +311,7 @@ const Dashboard = () => {
             />
          
             <ToastContainer />
-            <div className='container mx-auto py-5 px-6 '>
+            <div className='container mx-auto py-5 px-2 md:px-6 '>
                 <h1 className='text-center my-5 text-3xl font-bold'>Welcome to your Dashboard</h1>
 
                 {!isCreator && (

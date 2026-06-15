@@ -8,7 +8,7 @@ const Username = ({ params }) => {
 
   return (
     <>
-    <PaymentPage username={params.username}/>
+    <PaymentPage username={decodeURIComponent(params.username)}/>
       
     </>
   )
