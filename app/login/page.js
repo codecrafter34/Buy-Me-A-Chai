@@ -3,12 +3,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React,{useEffect, useState} from 'react'
+import React,{useEffect, useState, Suspense} from 'react'
 import tea from "../tea.gif"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from 'next/navigation'
 import { setUserRole } from '@/actions/useractions'
-const Login = () => {
+const LoginContent = () => {
     const { data: session, update } = useSession();
     const router=useRouter()
     const searchParams = useSearchParams()
@@ -248,6 +248,14 @@ const Login = () => {
 
       </div>
     </div>
+  )
+}
+
+const Login = () => {
+  return (
+    <Suspense fallback={<div className="text-white text-center mt-20">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
 
